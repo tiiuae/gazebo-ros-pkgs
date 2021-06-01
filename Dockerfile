@@ -1,6 +1,14 @@
 # fog-sw BUILDER
 FROM ros:foxy-ros-base as fog-sw-builder
 
+# workaround for ROS GPG Key Expiration Incident
+RUN rm /etc/apt/sources.list.d/ros2-latest.list && \
+    apt-get update && \
+    apt-get install -y curl && \
+    curl http://repo.ros2.org/repos.key | sudo apt-key add - && \
+    echo "deb http://packages.ros.org/ros2/ubuntu focal main" > /etc/apt/sources.list.d/ros2-latest.list && \
+    apt-get update
+
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
     curl \
