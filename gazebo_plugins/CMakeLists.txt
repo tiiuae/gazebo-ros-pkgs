@@ -194,6 +194,22 @@ if(ENABLE_PROFILER)
   target_link_libraries(gazebo_ros_gps_sensor ${ignition-common3_LIBRARIES})
 endif()
 
+# gazebo_ros_mesh_qos
+add_library(gazebo_ros_mesh_qos SHARED
+  src/gazebo_ros_mesh_qos.cpp
+)
+target_include_directories(gazebo_ros_mesh_qos PUBLIC include)
+ament_target_dependencies(gazebo_ros_mesh_qos
+  "gazebo_ros"
+  "gazebo_dev"
+  "rclcpp"
+  "std_msgs"
+)
+ament_export_libraries(gazebo_ros_mesh_qos)
+if(ENABLE_PROFILER)
+  target_include_directories(gazebo_ros_mesh_qos PUBLIC ${ignition-common3_INCLUDE_DIRS})
+  target_link_libraries(gazebo_ros_mesh_qos ${ignition-common3_LIBRARIES})
+endif()
 
 # gazebo_ros_ray_sensor
 add_library(gazebo_ros_ray_sensor SHARED
@@ -508,6 +524,7 @@ install(TARGETS
     gazebo_ros_harness
     gazebo_ros_imu_sensor
     gazebo_ros_gps_sensor
+    gazebo_ros_mesh_qos
     gazebo_ros_joint_pose_trajectory
     gazebo_ros_joint_state_publisher
     gazebo_ros_planar_move
