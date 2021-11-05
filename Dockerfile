@@ -11,6 +11,7 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ros-galactic-camera-info-manager \
     ros-galactic-fastrtps \
     ros-galactic-rmw-fastrtps-cpp \
+    nlohmann-json3-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp

@@ -30,6 +30,7 @@ find_package(geometry_msgs REQUIRED)
 find_package(image_transport REQUIRED)
 find_package(cv_bridge REQUIRED)
 find_package(nav_msgs REQUIRED)
+find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
 find_package(std_msgs REQUIRED)
@@ -118,6 +119,22 @@ ament_target_dependencies(gazebo_ros_template
   "rclcpp"
 )
 ament_export_libraries(gazebo_ros_template)
+
+# mesh_sim_plugin
+add_library(mesh_sim_plugin SHARED
+  src/mesh_sim_plugin.cpp
+)
+target_include_directories(mesh_sim_plugin PUBLIC include)
+ament_target_dependencies(mesh_sim_plugin
+  "gazebo_dev"
+  "gazebo_ros"
+  "rclcpp"
+  "std_msgs"
+)
+target_link_libraries(mesh_sim_plugin
+  nlohmann_json::nlohmann_json
+)
+ament_export_libraries(mesh_sim_plugin)
 
 # multi_camera_plugin
 add_library(multi_camera_plugin SHARED
@@ -518,6 +535,7 @@ install(TARGETS
     gazebo_ros_tricycle_drive
     gazebo_ros_vacuum_gripper
     gazebo_ros_video
+    mesh_sim_plugin
     multi_camera_plugin
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
