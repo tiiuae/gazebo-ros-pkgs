@@ -20,12 +20,20 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 WORKDIR /build
 
-COPY . .
+COPY gazebo_dev/package.xml gazebo_dev/
+COPY gazebo_msgs/package.xml gazebo_msgs/
+COPY gazebo_plugins/package.xml gazebo_plugins/
+COPY gazebo_ros/package.xml gazebo_ros/
+COPY gazebo_ros_pkgs/package.xml gazebo_ros_pkgs/
 
 RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && \
     apt-get update && \
     rosdep update && \
-    rosdep install --from-paths . --ignore-src -r -y && \
+    rosdep install --from-paths . --ignore-src -r -y"
+
+COPY . .
+
+RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && \
     colcon build && \
     mkdir /packages && cd install && \
     find . -name '*.so' -exec cp --parents \{\} /packages \;"
