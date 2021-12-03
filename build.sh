@@ -20,7 +20,7 @@ cp -r packages/* "${output}"
 rm -Rf packages
 
 pushd "${output_dir}"
-tar -zcvf "gazebo_ros_pkgs-0.1.0${git_version}.tar.gz" ./gazebo_ros_pkgs
+tar -zcvf "gazebo_ros_pkgs-0.2.0${git_version}_galactic.tar.gz" ./gazebo_ros_pkgs
 rm -rf ./gazebo_ros_pkgs
 popd
 popd

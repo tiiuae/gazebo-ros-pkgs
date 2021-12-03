@@ -1,5 +1,5 @@
 # fog-sw BUILDER
-FROM ros:foxy-ros-base as fog-sw-builder
+FROM ros:galactic-ros-base as fog-sw-builder
 
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
@@ -14,7 +14,7 @@ WORKDIR /build
 
 COPY . .
 
-RUN /bin/bash -c "source /opt/ros/foxy/setup.bash && \
+RUN /bin/bash -c "source /opt/ros/galactic/setup.bash && \
     apt-get update && \
     rosdep update && \
     rosdep install --from-paths . --ignore-src -r -y && \
