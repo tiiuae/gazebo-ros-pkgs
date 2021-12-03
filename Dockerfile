@@ -8,7 +8,12 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     dh-make debhelper \
     cmake \
     git-core \
+    ros-galactic-camera-info-manager \
+    ros-galactic-fastrtps \
+    ros-galactic-rmw-fastrtps-cpp \
     && rm -rf /var/lib/apt/lists/*
+
+ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
 
 WORKDIR /build
 
