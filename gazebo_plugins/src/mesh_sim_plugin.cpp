@@ -146,17 +146,19 @@ void MeshSimPlugin::OnDroneConfig(const std_msgs::msg::String::SharedPtr msg) {
             return;
         }
         const std::lock_guard<std::mutex> lock(drones_mutex_);
-        if (drone_macs_.count(config.mac)) {
+        auto name = drone_names_by_mac_.find(config.mac);
+        if (name != drone_names_by_mac_.end() && name->second != config.name) {
             RCLCPP_WARN_STREAM(
                 ros_node_->get_logger(),
                 "Drone " << config.name
                 << " will not be added to the mesh simulation because MAC address "
-                << config.mac << " is already in use."
+                << config.mac << " is already used by drone " << name->second << "."
             );
             return;
         }
-        drone_macs_.insert(config.mac);
-        drones_[config.name].config = config;
+        drone_names_by_mac_.erase(drones_by_name_[config.name].config.mac);
+        drone_names_by_mac_.emplace(config.mac, config.name);
+        drones_by_name_[config.name].config = config;
         RCLCPP_INFO(ros_node_->get_logger(), "Drone config processed");
     } catch (json::exception& e) {
         RCLCPP_ERROR_STREAM(
@@ -176,8 +178,8 @@ void MeshSimPlugin::PublishMeshInfo() {
             auto name = m->GetName();
             if (name.compare(0, name_prefix_.length(), name_prefix_.c_str()) == 0) {
                 name.erase(0, name_prefix_.length());
-                auto it = drones_.find(name);
-                if (it != drones_.end()) {
+                auto it = drones_by_name_.find(name);
+                if (it != drones_by_name_.end()) {
                     auto pos = m->WorldPose();
                     it->second.x = pos.X();
                     it->second.y = pos.Y();
@@ -189,22 +191,22 @@ void MeshSimPlugin::PublishMeshInfo() {
     }
     
     // Remove drones that no longer exist
-    for (auto i = drones_.begin(); i != drones_.end();) {
+    for (auto i = drones_by_name_.begin(); i != drones_by_name_.end();) {
         if (i->second.exists) {
             i->second.exists = false;
             ++i;
         } else {
-            drone_macs_.erase(i->second.config.mac);
-            i = drones_.erase(i);
+            drone_names_by_mac_.erase(i->second.config.mac);
+            i = drones_by_name_.erase(i);
         }
     }
 
     // Build network graph
     std::unordered_map<std::string, std::set<MeshNeighbor>> mesh_nodes;
-    for (auto& it1 : drones_) {
+    for (auto& it1 : drones_by_name_) {
         auto& d1 = it1.second;
         auto& mesh_neighbors = mesh_nodes[d1.config.mac];
-        for (auto& it2 : drones_) {
+        for (auto& it2 : drones_by_name_) {
             auto& d2 = it2.second;
             if (d1.config.mac == d2.config.mac) continue;
             auto distance = std::sqrt(
