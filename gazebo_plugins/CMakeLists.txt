@@ -33,6 +33,9 @@ find_package(nav_msgs REQUIRED)
 find_package(nlohmann_json REQUIRED)
 find_package(rclcpp REQUIRED)
 find_package(sensor_msgs REQUIRED)
+find_package(OpenCV REQUIRED)
+find_package(PkgConfig REQUIRED)
+pkg_check_modules(GST REQUIRED IMPORTED_TARGET gstreamer-1.0)
 find_package(std_msgs REQUIRED)
 find_package(std_srvs REQUIRED)
 find_package(tf2 REQUIRED)
@@ -40,7 +43,16 @@ find_package(tf2_geometry_msgs REQUIRED)
 find_package(tf2_ros REQUIRED)
 find_package(trajectory_msgs REQUIRED)
 
-link_directories(${gazebo_dev_LIBRARY_DIRS})
+include_directories(SYSTEM
+  ${GST_INCLUDE_DIRS}
+  ${OpenCV_INCLUDE_DIRS}
+)
+
+link_directories(
+  ${gazebo_dev_LIBRARY_DIRS}
+  ${GST_LIBRARY_DIRS}
+  ${OpenCV_LIBRARY_DIRS}
+)
 
 option(ENABLE_PROFILER "Enable Ignition Profiler" FALSE)
 if(ENABLE_PROFILER)
@@ -169,6 +181,8 @@ target_link_libraries(gazebo_ros_camera
   CameraPlugin
   DepthCameraPlugin
   multi_camera_plugin
+  ${GST_LIBRARIES} gstapp-1.0
+  ${OpenCV_LIBRARIES}
 )
 ament_export_libraries(gazebo_ros_camera)
 if(ENABLE_PROFILER)
