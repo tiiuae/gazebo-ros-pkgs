@@ -15,9 +15,11 @@
 #ifndef GAZEBO_PLUGINS__GAZEBO_ROS_CAMERA_HPP_
 #define GAZEBO_PLUGINS__GAZEBO_ROS_CAMERA_HPP_
 
+#include <builtin_interfaces/msg/time.hpp>
 #include <gazebo/plugins/CameraPlugin.hh>
 #include <gazebo/plugins/DepthCameraPlugin.hh>
 #include <gazebo_plugins/multi_camera_plugin.hpp>
+#include <gst/gst.h>
 #include <std_msgs/msg/empty.hpp>
 
 #include <memory>
@@ -168,6 +170,18 @@ private:
 
   // A handler for the param change callback.
   rclcpp::node_interfaces::OnSetParametersCallbackHandle::SharedPtr param_change_callback_handler_;
+
+  void startGstPipeline();
+
+  void pushToGstPipeline(
+    const unsigned char * image,
+    unsigned int width,
+    unsigned int height,
+    const builtin_interfaces::msg::Time& time,
+    const int camera_num
+  );
+
+  bool publishVideoFrame(GstElement* sink, size_t camera_num);
 };
 }  // namespace gazebo_plugins
 
