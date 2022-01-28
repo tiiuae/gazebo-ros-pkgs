@@ -17,6 +17,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     cmake \
     git-core \
     nlohmann-json3-dev \
+    pkg-config \
+    libopencv-imgproc-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
 WORKDIR /build
