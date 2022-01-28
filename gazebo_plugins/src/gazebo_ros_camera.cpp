@@ -894,7 +894,6 @@ void GazeboRosCamera::NewFrame(
     _image,
     _width,
     _height,
-    sensor_update_time_ros,
     _camera_num
   );
 
@@ -911,7 +910,6 @@ void GazeboRosCamera::pushToGstPipeline(
   const unsigned char * image,
   unsigned int width,
   unsigned int height,
-  const builtin_interfaces::msg::Time& time,
   const int camera_num
 ) {
   guint size = width * height * 1.5;

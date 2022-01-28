@@ -177,7 +177,6 @@ private:
     const unsigned char * image,
     unsigned int width,
     unsigned int height,
-    const builtin_interfaces::msg::Time& time,
     const int camera_num
   );
 
