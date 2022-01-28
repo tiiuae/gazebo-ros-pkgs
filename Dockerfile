@@ -12,6 +12,10 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
     ros-galactic-fastrtps \
     ros-galactic-rmw-fastrtps-cpp \
     nlohmann-json3-dev \
+    pkg-config \
+    libopencv-imgproc-dev \
+    libgstreamer1.0-dev \
+    libgstreamer-plugins-base1.0-dev \
     && rm -rf /var/lib/apt/lists/*
 
 ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
