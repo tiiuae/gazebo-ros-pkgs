@@ -119,7 +119,6 @@ public:
   bool useCuda = false;
   bool useCudaCustomParams = false;
   bool useVaapi = false;
-  std::string ros_namespace_;
 
   /// Camera info publishers.
   std::vector<rclcpp::Publisher<sensor_msgs::msg::CameraInfo>::SharedPtr> camera_info_pub_;
@@ -233,8 +232,10 @@ void GazeboRosCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _
   // Get tf frame for output
   impl_->frame_name_ = gazebo_ros::SensorFrameID(*_sensor, *_sdf);
 
-  impl_->ros_namespace_ = _sdf->Get<std::string>("rosNamespace", "").first;
-  auto topic_prefix = impl_->ros_namespace_ + "/" + impl_->camera_name_;
+  std::string topic_prefix;
+  topic_prefix += impl_->ros_node_->get_namespace();
+  topic_prefix += "/";
+  topic_prefix += impl_->camera_name_;
   if (impl_->sensor_type_ != GazeboRosCameraPrivate::MULTICAMERA) {
     // Image publisher
     // TODO(louise) Migrate image_connect logic once SubscriberStatusCallback is ported to ROS2
@@ -275,7 +276,10 @@ void GazeboRosCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _
   } else {
     for (uint64_t i = 0; i < impl_->num_cameras_; ++i) {
       auto camera_name = MultiCameraPlugin::camera_[i]->Name();
-      auto topic_prefix = impl_->ros_namespace_ + "/" + camera_name;
+      std::string topic_prefix;
+      topic_prefix += impl_->ros_node_->get_namespace();
+      topic_prefix += "/";
+      topic_prefix += camera_name;
       auto camera_topic = topic_prefix + "/image_raw";
       // Image publisher
       impl_->image_pub_.push_back(
@@ -633,10 +637,10 @@ void GazeboRosCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _
     impl_->ros_node_->add_on_set_parameters_callback(param_change_callback);
 
   gst_init(nullptr, nullptr);
-  impl_->convFbImgToI420 = _sdf->Get<bool>("convFbImgToI420", true).first;
-  impl_->useCuda = _sdf->Get<bool>("useCuda", false).first;
-  impl_->useCudaCustomParams = _sdf->Get<bool>("useCudaCustomParams", false).first;
-  impl_->useVaapi = _sdf->Get<bool>("useVaapi", false).first;
+  impl_->convFbImgToI420 = _sdf->Get<bool>("convFbImgToI420", impl_->convFbImgToI420).first;
+  impl_->useCuda = _sdf->Get<bool>("useCuda", impl_->useCuda).first;
+  impl_->useCudaCustomParams = _sdf->Get<bool>("useCudaCustomParams", impl_->useCudaCustomParams).first;
+  impl_->useVaapi = _sdf->Get<bool>("useVaapi", impl_->useVaapi).first;
   for (uint64_t i = 0; i < impl_->num_cameras_; ++i) {
     std::thread thread{
       &GazeboRosCamera::startGstPipeline,
