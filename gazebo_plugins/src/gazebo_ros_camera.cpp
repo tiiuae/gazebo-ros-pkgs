@@ -147,6 +147,8 @@ public:
   /// Frame name, to be used by TF.
   std::string frame_name_;
 
+  std::vector<std::string> frame_ids_;
+
   /// Step sizes for fillImage
   std::vector<uint32_t> img_step_;
 
@@ -237,6 +239,7 @@ void GazeboRosCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _
   topic_prefix += "/";
   topic_prefix += impl_->camera_name_;
   if (impl_->sensor_type_ != GazeboRosCameraPrivate::MULTICAMERA) {
+    impl_->frame_ids_.push_back(impl_->camera_name_);
     // Image publisher
     // TODO(louise) Migrate image_connect logic once SubscriberStatusCallback is ported to ROS2
     const std::string camera_topic = topic_prefix + "/image_raw";
@@ -276,6 +279,7 @@ void GazeboRosCamera::Load(gazebo::sensors::SensorPtr _sensor, sdf::ElementPtr _
   } else {
     for (uint64_t i = 0; i < impl_->num_cameras_; ++i) {
       auto camera_name = MultiCameraPlugin::camera_[i]->Name();
+      impl_->frame_ids_.push_back(camera_name);
       std::string topic_prefix;
       topic_prefix += impl_->ros_node_->get_namespace();
       topic_prefix += "/";
@@ -1001,7 +1005,7 @@ bool GazeboRosCamera::publishVideoFrame(
     return true;
   }
   sensor_msgs::msg::CompressedImage frame;
-  frame.header.frame_id = buf->offset;
+  frame.header.frame_id = impl_->frame_ids_.at(camera_num);
   frame.header.stamp = impl_->ros_node_->get_clock()->now();
   frame.format = "H264";
   frame.data.resize(gst_buffer_get_size(buf), 0);
