@@ -73,11 +73,6 @@ void MeshSimPlugin::Load(gazebo::physics::WorldPtr world, sdf::ElementPtr sdf) {
     }
     update_interval_ = (update_rate_ > 0.0) ? 1/update_rate_ : 0.0;
 
-    name_prefix_ = "ssrc_fog_x-";
-    if (sdf->HasElement("namePrefix")) {
-        name_prefix_ = sdf->GetElement("namePrefix")->Get<std::string>();
-    }
-    
     signal_loss_start_distance_ = 3000;
     if (sdf->HasElement("signalLossStartDistance")) {
         signal_loss_start_distance_ = sdf->GetElement("signalLossStartDistance")->Get<double>();
@@ -172,32 +167,12 @@ void MeshSimPlugin::PublishMeshInfo() {
     const std::lock_guard<std::mutex> lock(drones_mutex_);
 
     // Update positions of drones
-    unsigned int count = world_->ModelCount();
-    for(unsigned int i = 0; i < count; i++) {
-        if (auto m = world_->ModelByIndex(i)) {
-            auto name = m->GetName();
-            if (name.compare(0, name_prefix_.length(), name_prefix_.c_str()) == 0) {
-                name.erase(0, name_prefix_.length());
-                auto it = drones_by_name_.find(name);
-                if (it != drones_by_name_.end()) {
-                    auto pos = m->WorldPose();
-                    it->second.x = pos.X();
-                    it->second.y = pos.Y();
-                    it->second.z = pos.Z();
-                    it->second.exists = true;
-                }
-            }
-        }
-    }
-    
-    // Remove drones that no longer exist
-    for (auto i = drones_by_name_.begin(); i != drones_by_name_.end();) {
-        if (i->second.exists) {
-            i->second.exists = false;
-            ++i;
-        } else {
-            drone_names_by_mac_.erase(i->second.config.mac);
-            i = drones_by_name_.erase(i);
+    for (auto& it : drones_by_name_) {
+        if (auto model = world_->ModelByName(it.first)) {
+            auto pos = model->WorldPose();
+            it.second.x = pos.X();
+            it.second.y = pos.Y();
+            it.second.z = pos.Z();
         }
     }
 

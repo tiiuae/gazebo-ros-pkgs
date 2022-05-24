@@ -41,7 +41,6 @@ struct DroneConfig {
 struct Drone {
     DroneConfig config;
     double x = 0, y = 0, z = 0;
-    bool exists = false;
 };
 
 /// \brief This gazebo plugin simulates a mesh network.
