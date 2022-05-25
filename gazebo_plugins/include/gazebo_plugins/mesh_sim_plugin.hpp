@@ -72,7 +72,8 @@ private:
     double signal_loss_start_distance_;
     double signal_max_distance_;
 
-    std::map<std::string, Drone> drones_by_name_;
+    std::map<std::string, Drone> active_drones_by_name_;
+    std::map<std::string, DroneConfig> all_drones_by_name_;
     std::map<std::string, std::string> drone_names_by_mac_;
     std::mutex drones_mutex_;
 

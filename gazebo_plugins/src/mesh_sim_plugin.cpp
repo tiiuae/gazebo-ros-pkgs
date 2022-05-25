@@ -151,9 +151,9 @@ void MeshSimPlugin::OnDroneConfig(const std_msgs::msg::String::SharedPtr msg) {
             );
             return;
         }
-        drone_names_by_mac_.erase(drones_by_name_[config.name].config.mac);
+        drone_names_by_mac_.erase(all_drones_by_name_[config.name].mac);
         drone_names_by_mac_.emplace(config.mac, config.name);
-        drones_by_name_[config.name].config = config;
+        all_drones_by_name_[config.name] = config;
         RCLCPP_INFO(ros_node_->get_logger(), "Drone config processed");
     } catch (json::exception& e) {
         RCLCPP_ERROR_STREAM(
@@ -166,22 +166,28 @@ void MeshSimPlugin::OnDroneConfig(const std_msgs::msg::String::SharedPtr msg) {
 void MeshSimPlugin::PublishMeshInfo() {
     const std::lock_guard<std::mutex> lock(drones_mutex_);
 
-    // Update positions of drones
-    for (auto& it : drones_by_name_) {
-        if (auto model = world_->ModelByName(it.first)) {
+    // Update positions of active drones
+    for (auto& allIt : all_drones_by_name_) {
+        if (auto model = world_->ModelByName(allIt.first)) {
             auto pos = model->WorldPose();
-            it.second.x = pos.X();
-            it.second.y = pos.Y();
-            it.second.z = pos.Z();
+            auto& active = active_drones_by_name_[allIt.first];
+            if (active.config.name.empty()) {
+                active.config = allIt.second;
+            }
+            active.x = pos.X();
+            active.y = pos.Y();
+            active.z = pos.Z();
+        } else {
+            active_drones_by_name_.erase(allIt.first);
         }
     }
 
     // Build network graph
     std::unordered_map<std::string, std::set<MeshNeighbor>> mesh_nodes;
-    for (auto& it1 : drones_by_name_) {
+    for (auto& it1 : active_drones_by_name_) {
         auto& d1 = it1.second;
         auto& mesh_neighbors = mesh_nodes[d1.config.mac];
-        for (auto& it2 : drones_by_name_) {
+        for (auto& it2 : active_drones_by_name_) {
             auto& d2 = it2.second;
             if (d1.config.mac == d2.config.mac) continue;
             auto distance = std::sqrt(
