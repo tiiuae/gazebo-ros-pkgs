@@ -743,10 +743,11 @@ void GazeboRosCamera::startGstPipeline() {
     encoder = gst_element_factory_make("nvh264enc", nullptr);
     if (impl_->useCudaCustomParams) {
       g_object_set(G_OBJECT(encoder), "bitrate", 2000, nullptr);
+      g_object_set(G_OBJECT(encoder), "preset", 4, nullptr);
       // rc-mode: 0 = default; 1 = constqp; 2 = cbr; 3 = vbr; 4 = vbr-minqp
       g_object_set(G_OBJECT(encoder), "rc-mode", 2, nullptr);
       g_object_set(G_OBJECT(encoder), "qos", true, nullptr);
-      g_object_set(G_OBJECT(encoder), "gop-size", 60, nullptr);
+      g_object_set(G_OBJECT(encoder), "gop-size", 1, nullptr);
     } else {
       g_object_set(G_OBJECT(encoder), "bitrate", 800, nullptr);
       g_object_set(G_OBJECT(encoder), "preset", 1, nullptr); //lower = faster, 6=medium
@@ -790,6 +791,9 @@ void GazeboRosCamera::startGstPipeline() {
     return;
   }
 
+  GstElement* parser = gst_element_factory_make("h264parse", nullptr);
+  g_object_set(G_OBJECT(parser), "config-interval", 1, nullptr);
+
   GstElement* filterH264 = gst_element_factory_make("capsfilter", "FilterH264");
   if (!filterH264) {
     RCLCPP_ERROR(
@@ -818,17 +822,17 @@ void GazeboRosCamera::startGstPipeline() {
 
   // Connect all elements to pipeline
   if (impl_->useVaapi) {
-    gst_bin_add_many(GST_BIN(pipeline), source, queue, converter, filterNV12, encoder, filterH264, sink, nullptr);
+    gst_bin_add_many(GST_BIN(pipeline), source, queue, converter, filterNV12, encoder, parser, filterH264, sink, nullptr);
   } else {
-    gst_bin_add_many(GST_BIN(pipeline), source, queue, converter, encoder, filterH264, sink, nullptr);
+    gst_bin_add_many(GST_BIN(pipeline), source, queue, converter, encoder, parser, filterH264, sink, nullptr);
   }
 
   // Link all elements
   gboolean link_ok;
   if (impl_->useVaapi) {
-    link_ok = gst_element_link_many(source, queue, converter, filterNV12, encoder, filterH264, sink, nullptr);
+    link_ok = gst_element_link_many(source, queue, converter, filterNV12, encoder, parser, filterH264, sink, nullptr);
   } else {
-    link_ok = gst_element_link_many(source, queue, converter, encoder, filterH264, sink, nullptr);
+    link_ok = gst_element_link_many(source, queue, converter, encoder, parser, filterH264, sink, nullptr);
   }
   if (!link_ok) {
     RCLCPP_ERROR(
