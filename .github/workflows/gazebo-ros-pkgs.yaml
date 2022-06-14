@@ -1,4 +1,4 @@
-name: main
+name: gazebo-ros-pkgs-artifacts
 
 on:
   push:
@@ -7,49 +7,38 @@ on:
     branches: [ galactic ]
 
 jobs:
-  gazebo-ros-pkgs:
+  gazebo-ros-pkgs-artifacts:
     runs-on: ubuntu-latest
     steps:
-
-      - name: Checkout gazebo_ros_pkgs
+      - name: Checkout gazebo-ros-pkgs
         uses: actions/checkout@v2
         with:
-          path: gazebo_ros_pkgs
+          submodules: recursive
 
-      # Run docker build
-      - name: Run docker build
-        run: |
-          set -eux
-          mkdir bin
-          pushd gazebo_ros_pkgs
-          ./build.sh ../bin/
-          ls ../bin
+      - uses: docker/setup-buildx-action@v1
 
-      - uses: jfrog/setup-jfrog-cli@v2
-        env:
-          JF_ARTIFACTORY_1: ${{ secrets.ARTIFACTORY_TOKEN }}
+      - name: Docker meta
+        id: meta
+        uses: docker/metadata-action@v3
+        with:
+          images: ghcr.io/tiiuae/gazebo-ros-pkgs-artifacts
+          tags: |
+            type=ref,event=branch
+            type=ref,event=pr
+            type=semver,pattern={{version}}
+            type=sha
 
-      - name: Upload to Artifactory
-        env:
-          ARTIFACTORY_GEN_REPO: gen-public-local
-          BUILD_NAME: gazebo-ros-pkgs
-          CI: true
-        if: github.event_name == 'push'
-        run: |
-          set -exu
-          jfrog rt ping
-          pkg=$(find bin -name 'gazebo_ros_pkgs*.tar.gz')
-          pkg_name=$(basename $pkg)
-          jfrog rt u --target-props COMMIT="$GITHUB_SHA" \
-                     --build-name "$BUILD_NAME" \
-                     --build-number "$GITHUB_SHA" \
-                     "$pkg" \
-                     "$ARTIFACTORY_GEN_REPO/builds/gazebo-ros-pkgs/$pkg_name"
-          jfrog rt build-publish "$BUILD_NAME" "$GITHUB_SHA"
-          jfrog rt bpr "$BUILD_NAME" "$GITHUB_SHA" "$ARTIFACTORY_GEN_REPO" \
-                       --status dev \
-                       --comment "development build"
-          jfrog rt cp --flat \
-                      "$ARTIFACTORY_GEN_REPO/builds/gazebo-ros-pkgs/$pkg_name" \
-                      "$ARTIFACTORY_GEN_REPO/builds/gazebo-ros-pkgs/latest/gazebo_ros_pkgs.tar.gz"
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
 
+      - name: Build gazebo-ros-pkgs-artifacts image and push
+        uses: docker/build-push-action@v2
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
