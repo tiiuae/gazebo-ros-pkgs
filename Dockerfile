@@ -1,26 +1,16 @@
-# fog-sw BUILDER
-FROM ros:galactic-ros-base as fog-sw-builder
+# BUILDER
+#FROM ros:galactic-ros-base as builder
+FROM ghcr.io/tiiuae/fog-ros-baseimage:builder-latest AS builder
 
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
-    curl \
-    build-essential \
-    dh-make debhelper \
-    cmake \
-    git-core \
     ros-galactic-camera-info-manager \
-    ros-galactic-fastrtps \
-    ros-galactic-rmw-fastrtps-cpp \
     nlohmann-json3-dev \
     pkg-config \
     libopencv-imgproc-dev \
     libgstreamer1.0-dev \
     libgstreamer-plugins-base1.0-dev \
     && rm -rf /var/lib/apt/lists/*
-
-ENV RMW_IMPLEMENTATION=rmw_fastrtps_cpp
-
-WORKDIR /build
 
 COPY . .
 
@@ -30,7 +20,7 @@ RUN /bin/bash -c "source /opt/ros/galactic/setup.bash && \
     rosdep install --from-paths . --ignore-src -r -y && \
     colcon build && \
     mkdir /packages && cd install && \
-    find . -name '*.so' -exec cp --parents \{\} /packages \;"
+    find . -name '*.so' -exec cp {} /packages \;"
 
-FROM scratch
-COPY --from=fog-sw-builder /packages/ /packages/
+FROM busybox
+COPY --from=builder /packages/ /artifacts/plugins
