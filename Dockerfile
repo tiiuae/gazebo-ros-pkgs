@@ -1,6 +1,6 @@
 # BUILDER
 #FROM ros:galactic-ros-base as builder
-FROM ghcr.io/tiiuae/fog-ros-baseimage:builder-latest AS builder
+FROM ghcr.io/tiiuae/fog-ros-baseimage:builder-3dcb78d AS builder
 
 # Install build dependencies
 RUN apt-get update -y && apt-get install -y --no-install-recommends \
