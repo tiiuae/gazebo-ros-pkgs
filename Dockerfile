@@ -14,13 +14,13 @@ RUN apt-get update -y && apt-get install -y --no-install-recommends \
 
 COPY . .
 
-RUN /bin/bash -c "source /opt/ros/galactic/setup.bash && \
-    apt-get update && \
+RUN apt-get update && \
+    echo "yaml file:///$PWD/rosdep.yaml" \
     rosdep update && \
     rosdep install --from-paths . --ignore-src -r -y && \
     colcon build && \
     mkdir /packages && cd install && \
-    find . -name '*.so' -exec cp {} /packages \;"
+    find . -name '*.so' -exec cp {} /packages \;
 
 FROM busybox
 COPY --from=builder /packages/ /artifacts/plugins

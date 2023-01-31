@@ -1,0 +1,4 @@
+image_transport:
+  ubuntu: ros-galactic-image-transport
+cv_bridge:
+  ubuntu: ros-galactic-cv-bridge
