@@ -1009,8 +1009,17 @@ bool GazeboRosCamera::publishVideoFrame(
     return true;
   }
   sensor_msgs::msg::CompressedImage frame;
+  gazebo::common::Time sensor_update_time;
+  if (impl_->sensor_type_ == GazeboRosCameraPrivate::CAMERA) {
+    sensor_update_time = CameraPlugin::parentSensor->LastMeasurementTime();
+  } else if (impl_->sensor_type_ == GazeboRosCameraPrivate::DEPTH) {
+    sensor_update_time = DepthCameraPlugin::parentSensor->LastMeasurementTime();
+  } else {
+    sensor_update_time = MultiCameraPlugin::parent_sensor_->LastMeasurementTime();
+  }
+  frame.header.stamp =
+    gazebo_ros::Convert<builtin_interfaces::msg::Time>(sensor_update_time);
   frame.header.frame_id = impl_->frame_ids_.at(camera_num);
-  frame.header.stamp = impl_->ros_node_->get_clock()->now();
   frame.format = "H264";
   frame.data.resize(gst_buffer_get_size(buf), 0);
   gst_buffer_extract(buf, 0, frame.data.data(), frame.data.size());
